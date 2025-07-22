@@ -1,12 +1,22 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-const paddleWidth = 10, paddleHeight = 100;
-const player1 = { x: 20, y: 200, dy: 0 };
-const player2 = { x: 770, y: 200, dy: 0 };
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+const paddleWidth = 10;
+const paddleHeight = 100;
+const player1 = { x: 30, y: canvas.height / 2 - 50, dy: 0, misses: 0 };
+const player2 = { x: canvas.width - 40, y: canvas.height / 2 - 50, dy: 0, misses: 0 };
 
 let balls = [createBall()];
 let bounceCount = 0;
+let timer = 60;
+let gameOver = false;
 
 function createBall() {
   const speed = 4;
@@ -31,6 +41,12 @@ function drawCircle(x, y, r, color) {
   ctx.fill();
 }
 
+function drawText(text, x, y, size = 20) {
+  ctx.fillStyle = 'white';
+  ctx.font = `${size}px sans-serif`;
+  ctx.fillText(text, x, y);
+}
+
 function movePlayers() {
   player1.y += player1.dy;
   player2.y += player2.dy;
@@ -43,29 +59,39 @@ function updateBalls() {
     ball.x += ball.dx;
     ball.y += ball.dy;
 
-    // Bounce off top/bottom walls
+    // Bounce off top/bottom
     if (ball.y - ball.radius < 0 || ball.y + ball.radius > canvas.height) {
       ball.dy *= -1;
       incrementBounces();
     }
 
     // Paddle collisions
-    if (ball.x - ball.radius < player1.x + paddleWidth &&
-        ball.y > player1.y && ball.y < player1.y + paddleHeight) {
+    if (
+      ball.x - ball.radius < player1.x + paddleWidth &&
+      ball.y > player1.y && ball.y < player1.y + paddleHeight
+    ) {
       ball.dx *= -1;
       ball.x = player1.x + paddleWidth + ball.radius;
       incrementBounces();
     }
 
-    if (ball.x + ball.radius > player2.x &&
-        ball.y > player2.y && ball.y < player2.y + paddleHeight) {
+    if (
+      ball.x + ball.radius > player2.x &&
+      ball.y > player2.y && ball.y < player2.y + paddleHeight
+    ) {
       ball.dx *= -1;
       ball.x = player2.x - ball.radius;
       incrementBounces();
     }
 
-    // Out of bounds (just reset ball position)
-    if (ball.x < 0 || ball.x > canvas.width) {
+    // Missed ball
+    if (ball.x < 0) {
+      player1.misses++;
+      Object.assign(ball, createBall());
+    }
+
+    if (ball.x > canvas.width) {
+      player2.misses++;
       Object.assign(ball, createBall());
     }
   }
@@ -82,24 +108,59 @@ function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawRect(player1.x, player1.y, paddleWidth, paddleHeight, 'white');
   drawRect(player2.x, player2.y, paddleWidth, paddleHeight, 'white');
+
+  drawText(`Misses: ${player1.misses}`, player1.x, player1.y - 20);
+  drawText(`Misses: ${player2.misses}`, player2.x - 80, player2.y - 20);
+  drawText(`Time Left: ${timer}`, canvas.width / 2 - 50, 30);
+
   for (let ball of balls) {
     drawCircle(ball.x, ball.y, ball.radius, 'white');
+  }
+
+  if (gameOver) {
+    ctx.fillStyle = 'white';
+    ctx.font = '40px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Game Over', canvas.width / 2, canvas.height / 2 - 40);
+    let result;
+    if (player1.misses < player2.misses) {
+      result = "Player 1 Wins!";
+    } else if (player2.misses < player1.misses) {
+      result = "Player 2 Wins!";
+    } else {
+      result = "It's a tie!";
+    }
+    ctx.fillText(result, canvas.width / 2, canvas.height / 2);
+    ctx.fillText(`P1 Misses: ${player1.misses} | P2 Misses: ${player2.misses}`, canvas.width / 2, canvas.height / 2 + 50);
   }
 }
 
 function gameLoop() {
-  movePlayers();
-  updateBalls();
-  draw();
-  requestAnimationFrame(gameLoop);
+  if (!gameOver) {
+    movePlayers();
+    updateBalls();
+    draw();
+    requestAnimationFrame(gameLoop);
+  } else {
+    draw(); // draw final screen
+  }
 }
+
+setInterval(() => {
+  if (!gameOver) {
+    timer--;
+    if (timer <= 0) {
+      gameOver = true;
+    }
+  }
+}, 1000);
 
 // Controls
 document.addEventListener('keydown', e => {
-  if (e.key === 'w') player1.dy = -5;
-  if (e.key === 's') player1.dy = 5;
-  if (e.key === 'ArrowUp') player2.dy = -5;
-  if (e.key === 'ArrowDown') player2.dy = 5;
+  if (e.key === 'w') player1.dy = -6;
+  if (e.key === 's') player1.dy = 6;
+  if (e.key === 'ArrowUp') player2.dy = -6;
+  if (e.key === 'ArrowDown') player2.dy = 6;
 });
 
 document.addEventListener('keyup', e => {
