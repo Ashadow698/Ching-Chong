@@ -1,22 +1,32 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-resizeCanvas();
-window.addEventListener('resize', resizeCanvas);
-
-const paddleWidth = 10;
-const paddleHeight = 100;
-const player1 = { x: 30, y: canvas.height / 2 - 50, dy: 0, misses: 0 };
-const player2 = { x: canvas.width - 40, y: canvas.height / 2 - 50, dy: 0, misses: 0 };
-
-let balls = [createBall()];
+let paddleWidth = 10;
+let paddleHeight = 100;
+let player1, player2;
+let balls = [];
 let bounceCount = 0;
 let timer = 60;
 let gameOver = false;
+
+// Initial values
+function resetPlayersAndBalls() {
+  player1 = { x: 30, y: canvas.height / 2 - 50, dy: 0, misses: 0 };
+  player2 = { x: canvas.width - 40, y: canvas.height / 2 - 50, dy: 0, misses: 0 };
+  balls = [createBall()];
+  bounceCount = 0;
+}
+
+// Responsive resize
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  if (!gameOver) {
+    resetPlayersAndBalls();
+  }
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
 
 function createBall() {
   const speed = 4;
@@ -146,6 +156,7 @@ function gameLoop() {
   }
 }
 
+// Countdown timer
 setInterval(() => {
   if (!gameOver) {
     timer--;
@@ -168,4 +179,6 @@ document.addEventListener('keyup', e => {
   if (['ArrowUp', 'ArrowDown'].includes(e.key)) player2.dy = 0;
 });
 
+// Start
+resetPlayersAndBalls();
 gameLoop();
