@@ -29,7 +29,7 @@ resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
 
 function createBall() {
-  const speed = 4;
+  const speed = 7; // faster ball speed
   return {
     x: canvas.width / 2,
     y: canvas.height / 2,
@@ -166,12 +166,12 @@ setInterval(() => {
   }
 }, 1000);
 
-// Controls
+// Controls with faster paddle speed
 document.addEventListener('keydown', e => {
-  if (e.key === 'w') player1.dy = -6;
-  if (e.key === 's') player1.dy = 6;
-  if (e.key === 'ArrowUp') player2.dy = -6;
-  if (e.key === 'ArrowDown') player2.dy = 6;
+  if (e.key === 'w') player1.dy = -10;
+  if (e.key === 's') player1.dy = 10;
+  if (e.key === 'ArrowUp') player2.dy = -10;
+  if (e.key === 'ArrowDown') player2.dy = 10;
 });
 
 document.addEventListener('keyup', e => {
